@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dawn of Champions - 3D MOBA Arena (Mobile Legends Style)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- 1. HERO SELECTION SCREEN -->
+  <div id="hero-select-screen" class="screen-overlay">
+    <div class="hero-select-header">
+      <h1 class="game-logo">DAWN OF CHAMPIONS</h1>
+      <p class="game-subtitle">PILIH HERO ANDA • 3D MOBA BATTLE ARENA</p>
+    </div>
+
+    <div class="hero-select-content">
+      <!-- Hero Cards Grid -->
+      <div class="hero-cards-grid">
+        <div class="hero-select-card selected" data-hero-id="valen">
+          <div class="hero-card-avatar">🏹</div>
+          <div class="hero-card-info">
+            <h3>Valen</h3>
+            <span class="hero-tag marksman">MARKSMAN</span>
+          </div>
+        </div>
+        <div class="hero-select-card" data-hero-id="ignis">
+          <div class="hero-card-avatar">🔥</div>
+          <div class="hero-card-info">
+            <h3>Ignis</h3>
+            <span class="hero-tag mage">MAGE</span>
+          </div>
+        </div>
+        <div class="hero-select-card" data-hero-id="kaelen">
+          <div class="hero-card-avatar">⚔️</div>
+          <div class="hero-card-info">
+            <h3>Kaelen</h3>
+            <span class="hero-tag fighter">FIGHTER</span>
+          </div>
+        </div>
+        <div class="hero-select-card" data-hero-id="shadow">
+          <div class="hero-card-avatar">🗡️</div>
+          <div class="hero-card-info">
+            <h3>Shadow</h3>
+            <span class="hero-tag assassin">ASSASSIN</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Detail Preview -->
+      <div class="hero-detail-preview">
+        <div class="preview-header">
+          <h2 id="preview-hero-name">Valen</h2>
+          <span id="preview-hero-title" class="preview-title">The Celestial Archer</span>
+          <span id="preview-hero-role" class="preview-role">Marksman • Easy</span>
+        </div>
+        <p id="preview-hero-lore" class="preview-lore">
+          An agile elven ranger channeling stellar light through her bow to pierce enemies from afar.
+        </p>
+
+        <div class="preview-skills">
+          <h4>SKILL SET</h4>
+          <div class="skill-row">
+            <span class="skill-badge">Skill 1</span>
+            <div class="skill-desc">
+              <strong id="preview-s1-name">Piercing Arrow</strong>
+              <p id="preview-s1-desc">Fires a high-velocity celestial arrow piercing all enemies in a line.</p>
+            </div>
+          </div>
+          <div class="skill-row">
+            <span class="skill-badge">Skill 2</span>
+            <div class="skill-desc">
+              <strong id="preview-s2-name">Wind Walk</strong>
+              <p id="preview-s2-desc">Gains +50% Movement Speed and +35% Attack Speed for 3.5s.</p>
+            </div>
+          </div>
+          <div class="skill-row">
+            <span class="skill-badge ultimate">ULTIMATE</span>
+            <div class="skill-desc">
+              <strong id="preview-ult-name">Astral Cataclysm</strong>
+              <p id="preview-ult-desc">Channels and fires a gigantic beam of stellar energy across 35 units.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-guide">
+          <h4>PANDUAN KONTROL</h4>
+          <div class="guide-grid">
+            <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / Drag : Bergerak</div>
+            <div><kbd>Spasi</kbd> / <kbd>A</kbd> : Serang (Attack)</div>
+            <div><kbd>Q</kbd> / <kbd>W</kbd> / <kbd>E</kbd> : Skill 1, 2, Ulti</div>
+            <div><kbd>B</kbd> : Recall • <kbd>F</kbd> : Spell</div>
+            <div><kbd>P</kbd> : Shop • <kbd>Tab</kbd> : Skor</div>
+          </div>
+        </div>
+
+        <button id="start-battle-btn" class="btn-start-battle" onclick="if(window.gameInstance && window.gameInstance.manualStart) window.gameInstance.manualStart();">
+          ⚔️ MULAI PERTANDINGAN (ENTER ARENA)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. IN-GAME HUD OVERLAY -->
+  <div id="game-hud" class="hud-overlay hidden">
+    <!-- Top Bar Left: Player Status -->
+    <div class="hud-top-left">
+      <div class="player-profile-box">
+        <div class="player-avatar-wrap">
+          <div id="player-avatar" class="hud-avatar">🏹</div>
+          <div id="player-level-badge" class="hud-level">1</div>
+        </div>
+        <div class="player-bars">
+          <div class="bar-container hp-bar">
+            <div id="player-hp-fill" class="bar-fill hp-fill" style="width: 100%;"></div>
+            <span id="player-hp-text" class="bar-text">2400 / 2400</span>
+          </div>
+          <div class="bar-container mana-bar">
+            <div id="player-mana-fill" class="bar-fill mana-fill" style="width: 100%;"></div>
+            <span id="player-mana-text" class="bar-text">450 / 450</span>
+          </div>
+        </div>
+      </div>
+      <div class="player-economy">
+        <span id="player-gold" class="hud-gold">💰 300</span>
+        <span id="player-kda" class="hud-kda">⚔️ 0 / 💀 0 / 🤝 0</span>
+      </div>
+    </div>
+
+    <!-- Top Bar Center: Timer & Scoreboard Button -->
+    <div class="hud-top-center">
+      <div id="game-timer" class="game-timer">00:00</div>
+    </div>
+
+    <!-- Top Bar Right: Minimap & Kill Feed -->
+    <div class="hud-top-right">
+      <div class="minimap-wrapper">
+        <canvas id="minimap-canvas" width="160" height="160"></canvas>
+      </div>
+      <div id="kill-feed-container" class="kill-feed-box"></div>
+    </div>
+
+    <!-- Center Announcer Banner -->
+    <div id="announcer-banner" class="announcer-overlay hidden">
+      <div class="announcer-wings-left"></div>
+      <h2 id="announcer-text">FIRST BLOOD!</h2>
+      <div class="announcer-wings-right"></div>
+    </div>
+
+    <!-- Bottom Left: Virtual Joystick & Quick Buy -->
+    <div class="hud-bottom-left">
+      <div id="quick-buy-box" class="quick-buy-panel" style="display: none;"></div>
+      <button id="shop-btn" class="shop-trigger-btn">
+        <span>🛒</span>
+        <label>SHOP [P]</label>
+      </button>
+      <div id="joystick-zone" class="joystick-container">
+        <div id="joystick-knob" class="joystick-thumb"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Center: Spells, Recall & Regen -->
+    <div class="hud-bottom-center">
+      <button id="recall-btn" class="aux-btn recall-btn" title="Recall (B)">
+        <span class="aux-icon">🌀</span>
+        <span class="aux-label">RECALL [B]</span>
+      </button>
+      <button id="regen-btn" class="aux-btn regen-btn" title="Regen (R)">
+        <span class="aux-icon">💚</span>
+        <span class="aux-label">REGEN [R]</span>
+      </button>
+      <button id="spell-btn" class="aux-btn spell-btn" title="Battle Spell (F)">
+        <span class="aux-icon">⚡</span>
+        <span class="aux-label">FLICKER [F]</span>
+        <div id="spell-cd" class="cooldown-overlay" style="display: none;">0</div>
+      </button>
+    </div>
+
+    <!-- Bottom Right: Attack & Skills -->
+    <div class="hud-bottom-right">
+      <!-- Target Locks -->
+      <div class="target-locks-group">
+        <button id="minion-lock-btn" class="lock-btn" title="Target Minion">
+          <span>🗡️</span>
+          <small>MINION</small>
+        </button>
+        <button id="turret-lock-btn" class="lock-btn" title="Target Turret">
+          <span>🏰</span>
+          <small>TURRET</small>
+        </button>
+      </div>
+
+      <!-- Main Attack Button -->
+      <button id="attack-btn" class="attack-main-btn" title="Basic Attack (Space / A)">
+        <div class="attack-inner-ring">
+          <span class="attack-icon">⚔️</span>
+          <span class="attack-label">ATTACK</span>
+        </div>
+      </button>
+
+      <!-- Skill 1 -->
+      <div class="skill-btn-wrapper s1-wrap">
+        <button id="skill1-plus" class="skill-upgrade-btn" style="display: none;">+</button>
+        <button id="skill1-btn" class="skill-action-btn" title="Skill 1 (Q)">
+          <span id="skill1-icon" class="skill-btn-icon">⚡</span>
+          <span class="skill-hotkey">Q</span>
+          <div id="skill1-cd" class="cooldown-overlay" style="display: none;">0</div>
+        </button>
+      </div>
+
+      <!-- Skill 2 -->
+      <div class="skill-btn-wrapper s2-wrap">
+        <button id="skill2-plus" class="skill-upgrade-btn" style="display: none;">+</button>
+        <button id="skill2-btn" class="skill-action-btn" title="Skill 2 (W)">
+          <span id="skill2-icon" class="skill-btn-icon">💨</span>
+          <span class="skill-hotkey">W</span>
+          <div id="skill2-cd" class="cooldown-overlay" style="display: none;">0</div>
+        </button>
+      </div>
+
+      <!-- Ultimate -->
+      <div class="skill-btn-wrapper ult-wrap">
+        <button id="ulti-plus" class="skill-upgrade-btn" style="display: none;">+</button>
+        <button id="ulti-btn" class="skill-action-btn ulti-action-btn" title="Ultimate (E)">
+          <span id="ulti-icon" class="skill-btn-icon">🌟</span>
+          <span class="skill-hotkey">E</span>
+          <div id="ulti-cd" class="cooldown-overlay" style="display: none;">0</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ITEM SHOP MODAL -->
+  <div id="shop-modal" class="modal-overlay hidden">
+    <div class="modal-window shop-window">
+      <div class="modal-header">
+        <h2>🛒 ITEM ARMORY (SHOP)</h2>
+        <button id="shop-close-btn" class="modal-close-btn">✖</button>
+      </div>
+      <div id="shop-items-grid" class="shop-grid"></div>
+    </div>
+  </div>
+
+  <!-- 4. SCOREBOARD MODAL (TAB) -->
+  <div id="scoreboard-modal" class="modal-overlay hidden">
+    <div class="modal-window scoreboard-window">
+      <div class="modal-header">
+        <h2>📊 MATCH SCOREBOARD [TAB]</h2>
+      </div>
+      <div class="scoreboard-content">
+        <div class="team-column blue-column">
+          <h3 class="team-header blue-head">TIM BIRU (ALLIES)</h3>
+          <div id="scoreboard-blue-team" class="team-rows"></div>
+        </div>
+        <div class="team-column red-column">
+          <h3 class="team-header red-head">TIM MERAH (ENEMIES)</h3>
+          <div id="scoreboard-red-team" class="team-rows"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MATCH END OVERLAY (VICTORY / DEFEAT) -->
+  <div id="game-over-modal" class="modal-overlay game-over-overlay hidden">
+    <div class="game-over-card">
+      <h1 id="game-over-title" class="victory-title">🏆 VICTORY</h1>
+      <div id="game-over-mvp" class="mvp-box"></div>
+      <button id="play-again-btn" class="btn-play-again">MAIN LAGI (PLAY AGAIN)</button>
+    </div>
+  </div>
+
+  <!-- Core 3D Engine & Game Logic (100% Offline & File:/// compatible) -->
+  <script src="js/three.min.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
