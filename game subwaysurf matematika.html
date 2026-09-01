@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Math Surfers 3D - Subway Sprint Matematika</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js with fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        if (typeof THREE === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+        }
+    </script>
+</head>
+<body>
+    <div id="game-app">
+        <!-- 3D Canvas Viewport -->
+        <div id="game-canvas-container"></div>
+
+        <!-- Threat / Danger Vignette Overlay -->
+        <div id="threat-vignette"></div>
+
+        <!-- In-Game HUD -->
+        <div id="hud-container" class="hidden">
+            <div class="hud-top">
+                <div class="hud-stats-group">
+                    <div class="stat-pill score-pill">
+                        <span class="icon">🏆</span>
+                        <span id="hud-score">0</span>
+                    </div>
+                    <div class="stat-pill coins-pill">
+                        <span class="icon">🪙</span>
+                        <span id="hud-coins">0</span>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="icon">📏</span>
+                        <span id="hud-distance">0m</span>
+                    </div>
+                    <div class="stat-pill" style="color: #ec4899; border-color: #ec4899;">
+                        <span id="hud-multiplier">x1</span>
+                    </div>
+                </div>
+                <div class="hud-controls-group">
+                    <button id="btn-mute" class="icon-btn" title="Mute/Unmute Audio">🔊</button>
+                    <button id="btn-pause" class="icon-btn" title="Pause Game">⏸️</button>
+                </div>
+            </div>
+
+            <!-- Math Question Floating Banner -->
+            <div id="hud-question-banner" class="hidden">
+                <div class="banner-label">PILIH JALUR JAWABAN YANG BENAR</div>
+                <div id="hud-question-text">7 × 8 = ?</div>
+            </div>
+
+            <!-- Active Powerup Timers List -->
+            <div class="hud-powerups-list">
+                <div id="powerup-badge-magnet" class="powerup-badge hidden">
+                    <div class="powerup-badge-inner">🧲 <span>Magnet</span></div>
+                    <div class="powerup-bar-bg"><div class="powerup-progress"></div></div>
+                </div>
+                <div id="powerup-badge-hoverboard" class="powerup-badge hidden">
+                    <div class="powerup-badge-inner">🛹 <span>Hoverboard</span></div>
+                    <div class="powerup-bar-bg"><div class="powerup-progress"></div></div>
+                </div>
+                <div id="powerup-badge-jetpack" class="powerup-badge hidden">
+                    <div class="powerup-badge-inner">🚀 <span>Jetpack</span></div>
+                    <div class="powerup-bar-bg"><div class="powerup-progress"></div></div>
+                </div>
+                <div id="powerup-badge-slowmo" class="powerup-badge hidden">
+                    <div class="powerup-badge-inner">⏱️ <span>Slow-Mo</span></div>
+                    <div class="powerup-bar-bg"><div class="powerup-progress"></div></div>
+                </div>
+                <div id="powerup-badge-multiplier" class="powerup-badge hidden">
+                    <div class="powerup-badge-inner">✖️2 <span>Double</span></div>
+                    <div class="powerup-bar-bg"><div class="powerup-progress"></div></div>
+                </div>
+            </div>
+
+            <!-- Floating Notice Toasts -->
+            <div id="floating-notices"></div>
+
+            <!-- Mobile Controls -->
+            <div id="mobile-controls">
+                <div class="mobile-dpad">
+                    <button id="mobile-btn-left" class="m-btn">⬅️</button>
+                    <button id="mobile-btn-right" class="m-btn">➡️</button>
+                </div>
+                <div class="mobile-actions">
+                    <button id="mobile-btn-slide" class="m-btn">⬇️</button>
+                    <button id="mobile-btn-jump" class="m-btn">⬆️</button>
+                    <button id="mobile-btn-board" class="m-btn action-board">🛹</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Screen / Main Menu -->
+        <div id="start-screen" class="overlay-screen">
+            <div class="menu-card">
+                <h1 class="game-title">MATH SURFERS</h1>
+                <p class="subtitle">Subway Endless Runner Edisi Matematika</p>
+
+                <div class="menu-stats-row">
+                    <div class="menu-stat-item">
+                        <div class="label">High Score</div>
+                        <div id="menu-highscore" class="value">0</div>
+                    </div>
+                    <div class="menu-stat-item">
+                        <div class="label">Total Koin</div>
+                        <div id="menu-coins" class="value">🪙 0</div>
+                    </div>
+                </div>
+
+                <div class="mode-selector">
+                    <h4>PILIH KATEGORI MATEMATIKA:</h4>
+                    <div class="mode-buttons-grid">
+                        <button class="mode-btn active" data-mode="addition_subtraction">➕➖ Tambah & Kurang</button>
+                        <button class="mode-btn" data-mode="multiplication_division">✖️➗ Kali & Bagi</button>
+                        <button class="mode-btn" data-mode="mixed">🔀 Operasi Campuran</button>
+                        <button class="mode-btn" data-mode="algebra">🧠 Aljabar Cepat</button>
+                    </div>
+                </div>
+
+                <button id="btn-play" class="btn-primary">▶ MULAI LARI</button>
+                <button id="btn-shop" class="btn-secondary">🛍️ TOKO KARAKTER</button>
+
+                <div class="controls-help">
+                    ⌨️ <b>Kontrol Keyboard</b>: A/D atau ⬅️/➡️ (Pindah Jalur), W/⬆️/Spasi (Lompat), S/⬇️ (Meluncur), E (Hoverboard)<br>
+                    📱 <b>Layar Sentuh</b>: Geser (Swipe) Kiri, Kanan, Atas, Bawah atau tombol di layar.
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="overlay-screen hidden">
+            <div class="menu-card">
+                <h1 class="game-title" style="background: linear-gradient(135deg, #ef4444, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GAME OVER</h1>
+                <p id="go-reason" class="subtitle" style="color: #ef4444; font-weight: 700;">Tertangkap oleh Inspektur!</p>
+
+                <div class="gameover-stats-grid">
+                    <div class="go-stat-card highlight">
+                        <div class="label">Skor Akhir</div>
+                        <div id="go-score" class="val">0</div>
+                    </div>
+                    <div class="go-stat-card">
+                        <div class="label">High Score</div>
+                        <div id="go-highscore" class="val">0</div>
+                    </div>
+                    <div class="go-stat-card">
+                        <div class="label">Koin Diperoleh</div>
+                        <div id="go-coins" class="val">+0</div>
+                    </div>
+                    <div class="go-stat-card">
+                        <div class="label">Jarak Lari</div>
+                        <div id="go-distance" class="val">0 m</div>
+                    </div>
+                    <div class="go-stat-card">
+                        <div class="label">Akurasi Matematika</div>
+                        <div id="go-accuracy" class="val">100%</div>
+                    </div>
+                    <div class="go-stat-card">
+                        <div class="label">Soal Terjawab</div>
+                        <div id="go-solved" class="val">0 / 0</div>
+                    </div>
+                </div>
+
+                <button id="btn-restart" class="btn-primary">🔄 MAIN LAGI</button>
+                <button id="btn-menu" class="btn-secondary">🏠 MENU UTAMA</button>
+            </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="overlay-screen hidden">
+            <div class="menu-card">
+                <h1 class="game-title">GAME DIHENTIKAN</h1>
+                <p class="subtitle">Tarik napas sejenak dan siapkan hitunganmu!</p>
+                <button id="btn-resume" class="btn-primary">▶ LANJUTKAN</button>
+                <button id="btn-pause-menu" class="btn-secondary">🏠 MENU UTAMA</button>
+            </div>
+        </div>
+
+        <!-- Character & Board Shop Modal -->
+        <div id="shop-modal" class="overlay-screen hidden">
+            <div class="menu-card" style="max-width: 620px;">
+                <h1 class="game-title">TOKO RUNNER</h1>
+                <p class="subtitle">Buka skin pelari baru dengan koin hasil lari!</p>
+
+                <div id="shop-items-container" class="shop-grid"></div>
+
+                <button id="btn-close-shop" class="btn-secondary">KEMBALI KE MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="math-engine.js"></script>
+    <script src="game3d.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
