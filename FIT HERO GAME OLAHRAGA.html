@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitHero - Game Olahraga & Kebugaran Interaktif</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div id="game-app">
+    <!-- Header Bar -->
+    <header class="game-header">
+      <div class="brand-logo">
+        <span>⚡</span> FIT<span>HERO</span>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill coins" title="FitCoins">
+          🪙 <span id="header-coins">100</span>
+        </div>
+        <div class="stat-pill calories" title="Kalori Terbakar">
+          🔥 <span id="header-calories">0</span> kcal
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button id="btn-sound-toggle" class="icon-btn" title="Toggle Suara">🔊</button>
+      </div>
+    </header>
+
+    <!-- Game Canvas Viewport -->
+    <div class="game-viewport">
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+      <!-- UI OVERLAY: MAIN MENU -->
+      <div id="screen-menu" class="ui-overlay">
+        <div class="menu-title-container">
+          <h1 class="hero-title">FIT HERO</h1>
+          <p class="hero-subtitle">🏆 Kejuaraan Arkade Olahraga & Kebugaran</p>
+        </div>
+
+        <div class="menu-options">
+          <button id="btn-play-tournament" class="menu-btn primary">
+            <span class="menu-btn-icon">🥇</span>
+            <div class="menu-btn-content">
+              <h3>OLIMPIADE 4 CABANG</h3>
+              <p>Tantang semua cabang olahraga secara maraton & raih piala emas!</p>
+            </div>
+          </button>
+
+          <button id="btn-play-free" class="menu-btn">
+            <span class="menu-btn-icon">🏅</span>
+            <div class="menu-btn-content">
+              <h3>Latihan Bebas</h3>
+              <p>Pilih cabang olahraga favoritmu</p>
+            </div>
+          </button>
+
+          <button id="btn-open-shop" class="menu-btn">
+            <span class="menu-btn-icon">🏋️‍♂️</span>
+            <div class="menu-btn-content">
+              <h3>Gym & Atlet</h3>
+              <p>Upgrade status & ganti karakter</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- UI OVERLAY: SPORT SELECTION -->
+      <div id="screen-sport-select" class="ui-overlay hidden">
+        <h2 class="screen-title">PILIH CABANG OLAHRAGA</h2>
+        <p class="screen-desc">Uji ketangkasan, kekuatan, kecepatan, dan refleks fisikmu!</p>
+
+        <div class="sport-grid">
+          <!-- Sport 1: Runner -->
+          <div class="sport-card" data-game="runner">
+            <span class="sport-card-icon">🏃‍♂️</span>
+            <h3>Lari & Rintangan</h3>
+            <p>Sprint 400m lintasan atletik, lompati gawang & ambil botol hidrasi.</p>
+            <span class="sport-card-record">400m Sprint</span>
+          </div>
+
+          <!-- Sport 2: Weightlifting -->
+          <div class="sport-card" data-game="weight">
+            <span class="sport-card-icon">🏋️‍♂️</span>
+            <h3>Angkat Beban</h3>
+            <p>Keseimbangan barbel sweet-spot & angkat beban berbobot ratusan KG.</p>
+            <span class="sport-card-record">Power Barbel</span>
+          </div>
+
+          <!-- Sport 3: Jump Rope -->
+          <div class="sport-card" data-game="rope">
+            <span class="sport-card-icon">🪢</span>
+            <h3>Lompat Tali Irama</h3>
+            <p>Cardio blitz berkecepatan tinggi dengan ritme ketukan presisi.</p>
+            <span class="sport-card-record">Cardio Blitz</span>
+          </div>
+
+          <!-- Sport 4: Boxing Bag -->
+          <div class="sport-card" data-game="boxing">
+            <span class="sport-card-icon">🥊</span>
+            <h3>Samsak Tinju</h3>
+            <p>Pukulan kombo cepat Jab, Cross, dan Uppercut ke samsak tinju.</p>
+            <span class="sport-card-record">Reflex Punch</span>
+          </div>
+        </div>
+
+        <button class="action-btn btn-secondary btn-back-menu">⬅️ Kembali ke Menu</button>
+      </div>
+
+      <!-- UI OVERLAY: GYM & ATHLETE UPGRADE -->
+      <div id="screen-shop" class="ui-overlay hidden">
+        <h2 class="screen-title">PUSAT KEBUGARAN & ATLET</h2>
+        <p class="screen-desc">Gunakan FitCoins untuk meningkatkan atribut dan memilih atlet andalanmu.</p>
+
+        <div class="shop-container">
+          <!-- Left: Character Card -->
+          <div class="athlete-preview-box">
+            <div id="shop-athlete-avatar" class="athlete-avatar">🏃‍♂️</div>
+            <h3 id="shop-athlete-name" style="font-size:1.3rem; margin-bottom:4px;">Budi Runner</h3>
+            <p id="shop-athlete-desc" style="font-size:0.85rem; color:var(--secondary); font-weight:600;">Speed Boost: Kecepatan lari +20%</p>
+            <div id="shop-athlete-selector" class="athlete-selector">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Right: Upgrades List -->
+          <div id="shop-upgrade-list" class="upgrade-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <button class="action-btn btn-secondary btn-back-menu">⬅️ Selesai & Kembali</button>
+      </div>
+
+      <!-- UI OVERLAY: MATCH RESULT -->
+      <div id="screen-result" class="ui-overlay hidden">
+        <div class="result-card">
+          <div id="res-medal" class="medal-badge">🥇</div>
+          <h2 id="res-title" style="font-size:1.4rem;">HASIL PERTANDINGAN</h2>
+          <div id="res-score" class="score-highlight">350 METER</div>
+
+          <div class="stats-grid-modal">
+            <div class="stat-box">
+              <span class="stat-box-label">🪙 FitCoins Didapat</span>
+              <span id="res-coins" class="stat-box-val" style="color:var(--accent);">+25</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-box-label">🔥 Kalori Terbakar</span>
+              <span id="res-calories" class="stat-box-val" style="color:var(--primary);">45 kcal</span>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button id="res-btn-retry" class="action-btn btn-secondary">🔄 Coba Lagi</button>
+            <button id="res-btn-next" class="action-btn btn-primary">Lanjut ➡️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- UI OVERLAY: TOURNAMENT VICTORY -->
+      <div id="screen-tournament-win" class="ui-overlay hidden">
+        <div class="result-card" style="max-width: 520px;">
+          <div class="medal-badge">🏆</div>
+          <h2 style="font-size:1.6rem; color:var(--accent);">JUARA UMUM OLIMPIADE!</h2>
+          <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">Kamu telah menyelesaikan seluruh cabang olahraga kebugaran!</p>
+
+          <div id="tourney-summary-list" style="margin: 14px 0; background:rgba(0,0,0,0.3); padding:12px; border-radius:12px; text-align:left; font-size:0.9rem;">
+            <!-- Summary items -->
+          </div>
+
+          <div style="font-size:1.1rem; color:var(--secondary); font-weight:800; margin-bottom:16px;">
+            🎁 Bonus Juara: +100 FitCoins!
+          </div>
+
+          <button class="action-btn btn-primary btn-back-menu" style="margin:0 auto;">🎉 Kembali ke Menu Utama</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- On-screen Touch Controls (Visible during gameplay) -->
+    <div id="touch-controls" class="touch-controller" style="display: none;">
+      <!-- Populated dynamically per active sport -->
+    </div>
+
+    <!-- Footer Controls Bar -->
+    <footer class="game-footer">
+      <div>
+        ⌨️ Kontrol: <span class="key-hint">Spasi / ↑ / W</span> Aksi Utama | <span class="key-hint">↓ / S</span> Slide | <span class="key-hint">← / A</span> Jab Kiri | <span class="key-hint">→ / D</span> Cross / Sprint
+      </div>
+      <div>
+        ⏸️ <span class="key-hint">ESC</span> Menu
+      </div>
+    </footer>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/athlete.js"></script>
+  <script src="js/games/runner.js"></script>
+  <script src="js/games/weight.js"></script>
+  <script src="js/games/rope.js"></script>
+  <script src="js/games/boxing.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

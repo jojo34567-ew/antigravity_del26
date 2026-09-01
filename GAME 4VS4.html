@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POINT BLANK: WEB STRIKE 4VS4</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts for authentic Point Blank style typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Rajdhani:wght@600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <!-- 3D WebGL Canvas Container -->
+    <div id="game-container"></div>
+
+    <!-- Damage Screen Red Flash Overlay -->
+    <div id="damage-overlay"></div>
+
+    <!-- Sniper Scope Overlay -->
+    <div id="sniper-scope">
+        <div class="scope-circle">
+            <div class="scope-crosshair-h"></div>
+            <div class="scope-crosshair-v"></div>
+            <div class="scope-ring inner"></div>
+            <div class="scope-ring outer"></div>
+            <div class="scope-mil-dots">
+                <span class="mil-dot" style="top: 30%"></span>
+                <span class="mil-dot" style="top: 40%"></span>
+                <span class="mil-dot" style="top: 60%"></span>
+                <span class="mil-dot" style="top: 70%"></span>
+                <span class="mil-dot" style="left: 30%"></span>
+                <span class="mil-dot" style="left: 40%"></span>
+                <span class="mil-dot" style="left: 60%"></span>
+                <span class="mil-dot" style="left: 70%"></span>
+            </div>
+        </div>
+        <div class="scope-blackout left"></div>
+        <div class="scope-blackout right"></div>
+    </div>
+
+    <!-- IN-GAME HUD -->
+    <div id="hud" class="hidden">
+        <!-- Top Match Header (TDM Scoreboard & Timer) -->
+        <div id="top-bar">
+            <!-- CT-FORCE (BLUE TEAM) -->
+            <div class="team-score-card ct-team">
+                <div class="team-badge ct-badge">CT-FORCE</div>
+                <div class="team-score" id="ct-score">00</div>
+                <div class="team-players" id="ct-alive-indicators">
+                    <span class="p-dot active"></span>
+                    <span class="p-dot active"></span>
+                    <span class="p-dot active"></span>
+                    <span class="p-dot active"></span>
+                </div>
+            </div>
+
+            <!-- MATCH INFO / TIMER -->
+            <div id="match-timer-box">
+                <div class="match-mode-label">TEAM DEATHMATCH 4v4</div>
+                <div id="match-timer">10:00</div>
+                <div class="target-score-label">TARGET: <span id="target-kills-display">40</span> KILLS</div>
+            </div>
+
+            <!-- FREE REBELS (RED TEAM) -->
+            <div class="team-score-card fr-team">
+                <div class="team-players" id="fr-alive-indicators">
+                    <span class="p-dot active"></span>
+                    <span class="p-dot active"></span>
+                    <span class="p-dot active"></span>
+                    <span class="p-dot active"></span>
+                </div>
+                <div class="team-score" id="fr-score">00</div>
+                <div class="team-badge fr-badge">FREE REBELS</div>
+            </div>
+        </div>
+
+        <!-- Radar / Tactical Minimap (Top Left) -->
+        <div id="radar-container">
+            <canvas id="radar-canvas" width="160" height="160"></canvas>
+            <div class="radar-scan-line"></div>
+            <div class="radar-label">TACTICAL RADAR</div>
+        </div>
+
+        <!-- Kill Feed (Top Right) -->
+        <div id="kill-feed"></div>
+
+        <!-- Dynamic Point Blank Crosshair -->
+        <div id="crosshair">
+            <div class="ch-line top"></div>
+            <div class="ch-line bottom"></div>
+            <div class="ch-line left"></div>
+            <div class="ch-line right"></div>
+            <div class="ch-center"></div>
+            <div id="hit-marker" class="hit-marker hidden"></div>
+        </div>
+
+        <!-- Center PB Kill Badges & Announcer Popups -->
+        <div id="kill-badges-container"></div>
+
+        <!-- Bottom Left: Health & Armor & Character Card -->
+        <div id="bottom-left-hud">
+            <div class="char-portrait-box" id="player-portrait">
+                <div class="char-icon" id="team-char-icon">🎖️</div>
+                <div class="char-team-tag" id="player-team-tag">CT</div>
+            </div>
+            <div class="vitals-container">
+                <div class="vital-row hp-row">
+                    <span class="vital-label">HP</span>
+                    <div class="vital-bar-bg">
+                        <div id="hp-bar" class="vital-bar-fill hp-fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="hp-text" class="vital-val">100</span>
+                </div>
+                <div class="vital-row ap-row">
+                    <span class="vital-label">AP</span>
+                    <div class="vital-bar-bg">
+                        <div id="ap-bar" class="vital-bar-fill ap-fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="ap-text" class="vital-val">100</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Center: Weapon Quick Selector Bar -->
+        <div id="weapon-slot-bar">
+            <div class="slot-item active" data-slot="1"><span class="slot-key">1</span> <span class="slot-name" id="slot-pri-name">AUG A3</span></div>
+            <div class="slot-item" data-slot="2"><span class="slot-key">2</span> <span class="slot-name" id="slot-sec-name">D-EAGLE</span></div>
+            <div class="slot-item" data-slot="3"><span class="slot-key">3</span> <span class="slot-name">FANG BLADE</span></div>
+            <div class="slot-item" data-slot="4"><span class="slot-key">4</span> <span class="slot-name" id="slot-grenade-name">K-400 [1]</span></div>
+        </div>
+
+        <!-- Bottom Right: Active Ammo & Weapon Details -->
+        <div id="bottom-right-hud">
+            <div class="weapon-name-display" id="hud-weapon-name">AUG A3 SILENCER</div>
+            <div class="ammo-counter">
+                <span id="ammo-clip" class="ammo-clip-val">30</span>
+                <span class="ammo-divider">/</span>
+                <span id="ammo-reserve" class="ammo-reserve-val">120</span>
+            </div>
+            <div class="fire-mode-badge" id="hud-firemode">BURST / AUTO</div>
+            <div id="reload-indicator" class="hidden">RELOADING...</div>
+        </div>
+
+        <!-- Spawn Protection Notice -->
+        <div id="spawn-protection-msg" class="hidden">
+            🛡️ INVULNERABLE (<span id="spawn-prot-sec">3</span>s)
+        </div>
+
+        <!-- Radio Callouts Box -->
+        <div id="radio-log"></div>
+    </div>
+
+    <!-- LOBBY / MAIN MENU SCREEN -->
+    <div id="main-menu">
+        <div class="pb-logo-container">
+            <div class="pb-title-sub">TACTICAL 4VS4 COMBAT SIMULATOR</div>
+            <h1 class="pb-title-main">POINT BLANK</h1>
+            <div class="pb-title-tag">WEB STRIKE EDITION</div>
+        </div>
+
+        <div class="menu-grid">
+            <!-- Team Selection -->
+            <div class="menu-card team-select-card">
+                <h2>1. PILIH TIM ANDA</h2>
+                <div class="team-options">
+                    <div class="team-option ct selected" data-team="CT">
+                        <div class="team-flag ct-flag">🛡️</div>
+                        <div class="team-title">CT-FORCE</div>
+                        <div class="team-desc">Pasukan Khusus Penegak Hukum & Taktikal Elit.</div>
+                        <div class="team-members">3 AI Teammates + Anda</div>
+                    </div>
+                    <div class="team-option fr" data-team="FR">
+                        <div class="team-flag fr-flag">🔥</div>
+                        <div class="team-title">FREE REBELS</div>
+                        <div class="team-desc">Pejuang Gerilya Bersenjata Berat & Lincah.</div>
+                        <div class="team-members">3 AI Teammates + Anda</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weapon Loadout Selection -->
+            <div class="menu-card weapon-select-card">
+                <h2>2. PILIH PRIMARY WEAPON</h2>
+                <div class="weapon-grid">
+                    <div class="weapon-option selected" data-weapon="aug">
+                        <div class="w-icon">🔫</div>
+                        <div class="w-name">AUG A3</div>
+                        <div class="w-type">Assault Rifle (Dot Scope)</div>
+                        <div class="w-stats">DMG: 29 | ACC: 88% | ROF: High</div>
+                    </div>
+                    <div class="weapon-option" data-weapon="kriss">
+                        <div class="w-icon">⚡</div>
+                        <div class="w-name">KRISS S.V</div>
+                        <div class="w-type">Dual SMG (Ultra Fast)</div>
+                        <div class="w-stats">DMG: 23 | ACC: 75% | ROF: Extreme</div>
+                    </div>
+                    <div class="weapon-option" data-weapon="l115a1">
+                        <div class="w-icon">🎯</div>
+                        <div class="w-name">L115A1</div>
+                        <div class="w-type">Sniper Rifle (One-Shot Kill)</div>
+                        <div class="w-stats">DMG: 110 | ACC: 99% | ROF: Low</div>
+                    </div>
+                    <div class="weapon-option" data-weapon="m1887">
+                        <div class="w-icon">💥</div>
+                        <div class="w-name">M1887</div>
+                        <div class="w-type">Pump Shotgun (Spread Damage)</div>
+                        <div class="w-stats">DMG: 140 | ACC: 60% | ROF: Med</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary & Match Settings -->
+            <div class="menu-card match-settings-card">
+                <h2>3. PENGATURAN MATCH</h2>
+                <div class="setting-item">
+                    <label>Target Kills TDM:</label>
+                    <select id="setting-target-kills">
+                        <option value="30">30 Kills (Cepat)</option>
+                        <option value="40" selected>40 Kills (Standar PB)</option>
+                        <option value="60">60 Kills (Panjang)</option>
+                        <option value="100">100 Kills (Hardcore)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>Tingkat Kesulitan Bot AI:</label>
+                    <select id="setting-bot-diff">
+                        <option value="easy">Recruit (Mudah)</option>
+                        <option value="normal" selected>Veteran (Normal PB)</option>
+                        <option value="hard">Major / Pro League (Sulit)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>Sensitivitas Mouse:</label>
+                    <input type="range" id="setting-mouse-sens" min="0.5" max="3.0" step="0.1" value="1.2">
+                    <span id="sens-val">1.2</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Guide -->
+        <div class="controls-guide-bar">
+            <span><b>[W,A,S,D]</b> Bergerak</span>
+            <span><b>[SHIFT]</b> Sprint</span>
+            <span><b>[SPASI]</b> Lompat</span>
+            <span><b>[CTRL/C]</b> Jongkok</span>
+            <span><b>[KLIK KIRI]</b> Tembak</span>
+            <span><b>[KLIK KANAN]</b> Scope / ADS</span>
+            <span><b>[R]</b> Reload</span>
+            <span><b>[Q]</b> Quick Switch</span>
+            <span><b>[1,2,3,4]</b> Pilih Senjata</span>
+            <span><b>[B]</b> Toko Senjata</span>
+            <span><b>[TAB]</b> Scoreboard</span>
+        </div>
+
+        <button id="btn-start-game" class="btn-pb-primary">MASUK PERTEMPURAN (READY... FIGHT!)</button>
+    </div>
+
+    <!-- IN-GAME SHOP / LOADOUT CHANGE (B Key) -->
+    <div id="shop-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>GUDANG SENJATA / LOADOUT (TEKAN B)</h2>
+                <button class="btn-close-modal" id="btn-close-shop">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-sub">Ganti senjata untuk respawn berikutnya atau langsung saat berada di Base.</p>
+                <div class="shop-grid" id="shop-weapon-list">
+                    <!-- Dynamic weapon items inserted via JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pb-secondary" id="btn-done-shop">KEMBALI KE GAME</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IN-GAME SCOREBOARD OVERLAY (TAB Key) -->
+    <div id="scoreboard-modal" class="modal-overlay hidden">
+        <div class="scoreboard-board">
+            <div class="scoreboard-header">
+                <div class="sc-title">POINT BLANK 4VS4 - TEAM DEATHMATCH</div>
+                <div class="sc-match-score">
+                    <span class="blue-text">CT-FORCE: <b id="sc-ct-score">0</b></span>
+                    <span class="vs-text">VS</span>
+                    <span class="red-text">FREE REBELS: <b id="sc-fr-score">0</b></span>
+                </div>
+            </div>
+
+            <!-- CT Table -->
+            <div class="scoreboard-team-box ct-box">
+                <div class="team-table-title ct-header">🛡️ CT-FORCE (BLUE TEAM)</div>
+                <table class="sc-table" id="sc-ct-table">
+                    <thead>
+                        <tr>
+                            <th>RANK</th>
+                            <th>NICKNAME</th>
+                            <th>WEAPON</th>
+                            <th>KILL</th>
+                            <th>DEATH</th>
+                            <th>SCORE</th>
+                            <th>PING</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- FR Table -->
+            <div class="scoreboard-team-box fr-box">
+                <div class="team-table-title fr-header">🔥 FREE REBELS (RED TEAM)</div>
+                <table class="sc-table" id="sc-fr-table">
+                    <thead>
+                        <tr>
+                            <th>RANK</th>
+                            <th>NICKNAME</th>
+                            <th>WEAPON</th>
+                            <th>KILL</th>
+                            <th>DEATH</th>
+                            <th>SCORE</th>
+                            <th>PING</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER / MATCH RESULTS MODAL -->
+    <div id="game-over-modal" class="modal-overlay hidden">
+        <div class="match-result-card">
+            <div id="result-team-banner" class="result-banner">VICTORY</div>
+            <h2 id="result-title">CT-FORCE WIN!</h2>
+            <div class="result-score-summary" id="result-score-summary">40 - 28</div>
+            
+            <div class="player-mvp-stats">
+                <div class="mvp-stat">
+                    <span class="mvp-label">YOUR KILLS</span>
+                    <span class="mvp-value" id="res-player-kills">18</span>
+                </div>
+                <div class="mvp-stat">
+                    <span class="mvp-label">YOUR DEATHS</span>
+                    <span class="mvp-value" id="res-player-deaths">4</span>
+                </div>
+                <div class="mvp-stat">
+                    <span class="mvp-label">HEADSHOTS</span>
+                    <span class="mvp-value" id="res-player-hs">7</span>
+                </div>
+                <div class="mvp-stat">
+                    <span class="mvp-label">ACCURACY</span>
+                    <span class="mvp-value" id="res-player-acc">74%</span>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button id="btn-play-again" class="btn-pb-primary">MAIN LAGI</button>
+                <button id="btn-back-lobby" class="btn-pb-secondary">KEMBALI KE LOBBY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause / Resume Prompt when cursor unlocks -->
+    <div id="pause-overlay" class="hidden">
+        <div class="pause-card">
+            <h2>GAME DIHENTIKAN SEMENTARA</h2>
+            <p>Klik tombol di bawah atau klik layar untuk melanjutkan kembali pertempuran!</p>
+            <button id="btn-resume-game" class="btn-pb-primary">LANJUTKAN TEMPUR</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/audio.js"></script>
+    <script src="js/weapons.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/bot.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
